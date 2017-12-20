@@ -1,0 +1,15 @@
+{
+  "short_name": "Haskell Functions",
+  "name": "Angular Firebase",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "type": "image/ico",
+      "sizes": "32x32"
+    }
+  ],
+  "start_url": "index.html",
+  "gcm_sender_id": "350049236638"
+}
+
+// 103953800507
