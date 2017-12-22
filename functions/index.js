@@ -8,12 +8,23 @@ admin.initializeApp(functions.config().firebase);
 //           console.log('value: ', bucket[key]);
 //         }
 //-------------------------- debug -----------------------------------
-exports.debug = admin.firestore().collection('/debug').get()
-  .then(x => {
-    for (let key in functions.auth.user()) {
-      console.log(functions.auth.user()[key], key);
-    }
-});
+// exports.debug = admin.firestore().collection('/debug').get()
+//   .then(x => {
+//     for (let key in cource) {
+//       console.log(cource[key], key);
+//     }
+// });
+//-------------------------- set id for cources -----------------------------------
+exports.setCourceId = functions.firestore.document('/cources/{courceID}')
+  .onCreate(cource => {
+    const newValue = cource.data.data();
+    newValue.id = cource.data.id;
+    newValue.created = new Date;
+    // console.log('-----------------------------------------');
+    // console.log(`cource ${newValue.title} successfully added!`);
+    // console.log('-----------------------------------------');
+    return admin.firestore().collection('cources').doc(`${newValue.id}`).set(newValue);
+  });
 
 //-------------------------- messaging -----------------------------------
 exports.fsSendcreate = functions.firestore.document('/cources/{courceID}')
@@ -93,13 +104,11 @@ exports.fsSenddelete = functions.firestore.document('/cources/{courceID}')
 
 //-------------------------- authentication -----------------------------------
 
-
-
 exports.sendWelcomeMsg = functions.auth.user().onCreate(event => {
   const user = event.data; // The Firebase user.
   const email = user.email; // The email of the user.
   const displayName = user.displayName; // The display name of the user.
-  const token = uer.token;
+  const token = user.token;
   const payload = {
       notification: {
         title: 'Circle CI test',
