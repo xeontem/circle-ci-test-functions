@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const { persist } = require('persistant-number');
 
 admin.initializeApp(functions.config().firebase);
 // const bucket = admin.storage().bucket();
@@ -39,7 +40,7 @@ exports.fsSendcreate = functions.firestore.document('/cources/{courceID}')
     };
     console.log('-----------------------------------------');
     console.log(`cource ${newValue.title} successfully added!`);
-    
+
     admin.firestore().collection('users').get()
       .then(snap => snap.docs)
       .then(docs => docs.map(doc => doc.data()))
@@ -64,7 +65,7 @@ exports.fsSendupdate = functions.firestore.document('/cources/{courceID}')
   };
   console.log('-----------------------------------------');
   console.log(`cource ${previousValue.title} successfully updated!`);
-  
+
   admin.firestore().collection('users').get()
     .then(snap => snap.docs)
     .then(docs => docs.map(doc => doc.data()))
@@ -89,7 +90,7 @@ exports.fsSenddelete = functions.firestore.document('/cources/{courceID}')
   };
   console.log('-----------------------------------------');
   console.log(`cource ${previousValue.title} successfully deleted!`);
-  
+
   admin.firestore().collection('users').get()
     .then(snap => snap.docs)
     .then(docs => docs.map(doc => doc.data()))
@@ -127,12 +128,12 @@ exports.backupCources = functions.https.onRequest((req, res) => {
   admin.firestore().collection('backup_cources').get()
     .then(snap => snap.docs)
     .then(docs => docs.map(doc => doc.data()))
-    .then(docs => docs.map(doc => 
+    .then(docs => docs.map(doc =>
       admin.firestore().collection('backup_cources').doc(doc.id).delete()))
     .then(docs => admin.firestore().collection('cources').get())
     .then(snap => snap.docs)
     .then(docs => docs.map(doc => doc.data()))
-    .then(cources => cources.map(cource => 
+    .then(cources => cources.map(cource =>
         admin.firestore().collection('backup_cources').doc(`${cource.id}`).set(cource)))
     .then(backup => {
       console.log(`backuped ${backup.length} cources. Backup success!!`);
@@ -162,12 +163,12 @@ exports.restoreCources = functions.https.onRequest((req, res) => {
   admin.firestore().collection('cources').get()
     .then(snap => snap.docs)
     .then(docs => docs.map(doc => doc.data()))
-    .then(docs => docs.map(doc => 
+    .then(docs => docs.map(doc =>
       admin.firestore().collection('cources').doc(doc.id).delete()))
     .then(docs => admin.firestore().collection('backup_cources').get())
     .then(snap => snap.docs)
     .then(docs => docs.map(doc => doc.data()))
-    .then(backups => backups.map(bcource => 
+    .then(backups => backups.map(bcource =>
         admin.firestore().collection('cources').doc(`${bcource.id}`).set(bcource)))
     .then(cources => {
       console.log(`restored ${cources.length} cources. Restore success!!`);
@@ -191,4 +192,10 @@ exports.restoreCources = functions.https.onRequest((req, res) => {
             admin.messaging().sendToDevice(user.token, payload);
         }))
     })
+});
+
+exports.calculatePersistNumbers = functions.https.onRequest((req, res) => {
+  console.log('calculatePersistNumbers called')
+  console.log(req.body);
+  res.send(persist(req.body.start, req.body.end, req.body.zeros));
 });
