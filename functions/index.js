@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const { persist } = require('persistant-number');
+const { persistNumber, persistRange } = require('persistant-number');
 
 admin.initializeApp(functions.config().firebase);
 // const bucket = admin.storage().bucket();
@@ -195,7 +195,23 @@ exports.restoreCources = functions.https.onRequest((req, res) => {
 });
 
 exports.calculatePersistNumbers = functions.https.onRequest((req, res) => {
-  console.log('calculatePersistNumbers called')
-  console.log(req.body);
-  res.send(persist(req.body.start, req.body.end, req.body.zeros));
+  res.set('Access-Control-Allow-Origin', '*');
+
+  if (req.method === 'OPTIONS') {
+    // Send response to OPTIONS requests
+    res.set('Access-Control-Allow-Methods', 'POST');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Max-Age', '3600');
+    res.status(204).send('');
+  } else {
+    try {
+      if (req.body.end && req.body.zeros) {
+        res.send(persistRange(req.body.start, req.body.end, req.body.zeros));
+      } else {
+        res.send([persistNumber(req.body.start)]);
+      }
+    } catch(e) {
+      res.send({ text: `Something went wrong. Parameters: ${JSON.stringify(req.body)}` });
+    }
+  }
 });
